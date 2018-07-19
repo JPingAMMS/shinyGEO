@@ -3,7 +3,7 @@
 # vector 'x' and group labels 'y'. The 'GroupNames' are levels of 'y' in 
 # presentation order, and 'group.names' are optional names for these levels 
 ################################################################################
-stripchart2 <- function(x,y, GroupNames, group.names = NULL, col = NULL, 
+stripchart2 <- function(x,y, GroupNames, group.names = NULL, col = NULL, fil = NULL,
                         main = "",  ...) {
   
   if (is.null(GroupNames)) return(NULL)
@@ -17,6 +17,7 @@ stripchart2 <- function(x,y, GroupNames, group.names = NULL, col = NULL,
   if (is.null(group.names)) group.names = GroupNames 
   
   if (is.null(col)) col = 1:length(s)
+  if (is.null(fil)) fil = 1:length(s)
   add = NULL
   
   
@@ -88,20 +89,36 @@ stripchart2 <- function(x,y, GroupNames, group.names = NULL, col = NULL,
     m$value[1] = 0
   }
   
-  stripchart3 <- ggplot(m, aes(x = as.factor(L1), y = value, color=L1)) 
-  stripchart3 <- stripchart3 + 
-           labs(title = main, y = "log2 expression", x="") +
-           theme(legend.position="none", 
-                 axis.text.x = element_text(face = "bold", color = "black")) +
-           scale_x_discrete(labels=group.names)
+#  stripchart3 <- ggplot(m, aes(x = as.factor(L1), y = value, color=L1)) 
+#  stripchart3 <- stripchart3 + 
+#           labs(title = main, y = "log2 expression", x="") +
+#           theme(legend.position="none", 
+#                 axis.text.x = element_text(face = "bold", color = "black")) +
+#           scale_x_discrete(labels=group.names)
+#  if (!no.obs) {
+#      stripchart3 <- stripchart3 + 
+#           geom_point(position = position_jitter(h=0,w=NULL), aes(colour = L1), na.rm = TRUE) + 
+#           scale_colour_manual(values = col) +
+#           geom_errorbar(stat = "summary", fun.y = "mean.no.na", width=0.8,
+#                         aes(ymax=..y..,ymin=..y..))
+#  } 
+#  return(stripchart3)
+  boxchart <- ggplot(m,aes(x=as.factor(L1),y=value))
+  boxchart <- boxchart +
+    labs(title = main, y = "log2 expression", x="") +
+    theme(legend.position="none",
+    axis.text.x = element_text(face = "bold", color = "black")) +
+    scale_x_discrete(labels=group.names)
   if (!no.obs) {
-      stripchart3 <- stripchart3 + 
-           geom_point(position = position_jitter(h=0,w=NULL), aes(colour = L1), na.rm = TRUE) + 
-           scale_colour_manual(values = col) +
-           geom_errorbar(stat = "summary", fun.y = "mean.no.na", width=0.8,
-                         aes(ymax=..y..,ymin=..y..))
-  } 
-  return(stripchart3)
+    boxchart <- boxchart +
+      geom_boxplot(aes(fill=L1),fatten = NULL,outlier.shape = 1) + # fatten设置middle宽度是NULL.
+      geom_beeswarm(aes(colour = L1), cex=1.5,na.rm = TRUE) +
+      scale_colour_manual(values = col) +
+      scale_fill_manual(values = fil) +
+      stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                   width = 0.75, size = 1, linetype = "solid")  # 添加mean代替middle
+  }
+  return(boxchart)
 }
 
 
